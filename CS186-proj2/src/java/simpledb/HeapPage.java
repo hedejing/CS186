@@ -2,6 +2,8 @@ package simpledb;
 
 import java.util.*;
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * Each instance of HeapPage stores data for one page of HeapFiles and 
@@ -65,8 +67,8 @@ public class HeapPage implements Page {
         @return the number of tuples on this page
     */
     private int getNumTuples() {        
-        // some code goes here
-        return 0;
+        // hdj
+    	return BufferPool.PAGE_SIZE * 8 /(td.getSize()*8 + 1);
 
     }
 
@@ -75,9 +77,8 @@ public class HeapPage implements Page {
      * @return the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      */
     private int getHeaderSize() {        
-        
-        // some code goes here
-        return 0;
+        // hdj
+    	return (getNumTuples()+7)/8;
                  
     }
     
@@ -102,8 +103,8 @@ public class HeapPage implements Page {
      * @return the PageId associated with this page.
      */
     public HeapPageId getId() {
-    // some code goes here
-    throw new UnsupportedOperationException("implement this");
+    	// hdj
+    	return pid;
     }
 
     /**
@@ -272,16 +273,19 @@ public class HeapPage implements Page {
      * Returns the number of empty slots on this page.
      */
     public int getNumEmptySlots() {
-        // some code goes here
-        return 0;
+        // hdj:!!! use getNumTuples instead of bitset.size() or bitset.length()
+    	BitSet bitset = BitSet.valueOf(header);
+    	return  getNumTuples() - bitset.cardinality();
+        
     }
 
     /**
      * Returns true if associated slot on this page is filled.
      */
     public boolean isSlotUsed(int i) {
-        // some code goes here
-        return false;
+        // hdj
+    	BitSet bitset = BitSet.valueOf(header);
+    	return bitset.get(i);
     }
 
     /**
@@ -291,14 +295,55 @@ public class HeapPage implements Page {
         // some code goes here
         // not necessary for lab1
     }
-
+    
+    /**
+     * @return a LittleEndian byte array.
+     */
+    
+    private byte[] BigEndian2LittleEndian(byte[] header){
+		byte[] littleEndian = new byte[header.length];
+    	for(int i=0; i<header.length ;i++){
+    		byte b = header[i];
+    		byte reverseByte = 0;
+    		for(int j=0; j<8; j++)
+    		{
+    			if(b%2==1)
+    				reverseByte += 1<<(7-j);
+    			b >>= 1;
+    		}
+    		littleEndian[i] = reverseByte;
+    	}
+    	return littleEndian;
+    }
     /**
      * @return an iterator over all tuples on this page (calling remove on this iterator throws an UnsupportedOperationException)
      * (note that this iterator shouldn't return tuples in empty slots!)
      */
+
+    
     public Iterator<Tuple> iterator() {
-        // some code goes here
-        return null;
+        // hdj
+    	final BitSet bitset = BitSet.valueOf(header);
+    	Iterator<Tuple> it = new Iterator<Tuple>(){    		
+    		int currentIndex = -1;
+    		public boolean hasNext(){
+    			if(bitset.nextSetBit(currentIndex+1) == -1)
+    				return false;
+    			else
+    				return true;
+    		}
+    		
+    		public Tuple next(){
+    			currentIndex = bitset.nextSetBit(currentIndex+1);
+   				return tuples[currentIndex];
+    		}
+    		
+    		public void remove(){
+    			throw new UnsupportedOperationException();
+    		}
+    	};
+    	
+        return it;
     }
 
 }

@@ -105,8 +105,7 @@ public class HeapFileReadTest extends SimpleDbTestBase {
     public void testIteratorClose() throws Exception {
         // make more than 1 page. Previous closed iterator would start fetching
         // from page 1.
-        HeapFile twoPageFile = SystemTestUtil.createRandomHeapFile(2, 520,
-                null, null);
+        HeapFile twoPageFile = SystemTestUtil.createRandomHeapFile(2, 520, null, null);
 
         DbFileIterator it = twoPageFile.iterator(tid);
         it.open();

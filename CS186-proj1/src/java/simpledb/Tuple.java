@@ -1,8 +1,12 @@
 package simpledb;
 
-import java.io.Serializable;
+import java.io.*;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+import simpledb.TupleDesc.TDItem;
 
 /**
  * Tuple maintains information about the contents of a tuple. Tuples have a
@@ -10,7 +14,9 @@ import java.util.Iterator;
  * with the data for each field.
  */
 public class Tuple implements Serializable {
-
+	private Field[] Items;
+	private RecordId id;
+	private TupleDesc td;
     private static final long serialVersionUID = 1L;
 
     /**
@@ -21,15 +27,17 @@ public class Tuple implements Serializable {
      *            instance with at least one field.
      */
     public Tuple(TupleDesc td) {
-        // some code goes here
+    	// hdj
+    	Items = new Field[td.numFields()];
+    	this.td = td;
     }
 
     /**
      * @return The TupleDesc representing the schema of this tuple.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        // hdj
+        return this.td;
     }
 
     /**
@@ -37,8 +45,8 @@ public class Tuple implements Serializable {
      *         be null.
      */
     public RecordId getRecordId() {
-        // some code goes here
-        return null;
+        // hdj
+    	return id;
     }
 
     /**
@@ -48,7 +56,8 @@ public class Tuple implements Serializable {
      *            the new RecordId for this tuple.
      */
     public void setRecordId(RecordId rid) {
-        // some code goes here
+        // hdj
+    	id = rid;
     }
 
     /**
@@ -60,7 +69,12 @@ public class Tuple implements Serializable {
      *            new value for the field.
      */
     public void setField(int i, Field f) {
-        // some code goes here
+        // hdj
+    	if(i >= Items.length)
+    		throw new NoSuchElementException();
+    	else{
+    		Items[i] = f;
+    	}
     }
 
     /**
@@ -70,8 +84,12 @@ public class Tuple implements Serializable {
      *            field index to return. Must be a valid index.
      */
     public Field getField(int i) {
-        // some code goes here
-        return null;
+    	// hdj
+    	if(i >= Items.length)
+    		throw new NoSuchElementException();
+    	else{
+    		return Items[i];
+    	}
     }
 
     /**
@@ -83,8 +101,13 @@ public class Tuple implements Serializable {
      * where \t is any whitespace, except newline, and \n is a newline
      */
     public String toString() {
-        // some code goes here
-        throw new UnsupportedOperationException("Implement this");
+        // hdj
+    	String s= "";
+    	for(Field field:Items){
+    		s += field.toString()+'\t';
+    	}
+    	s +='\n';
+    	return s;
     }
     
     /**
@@ -93,7 +116,30 @@ public class Tuple implements Serializable {
      * */
     public Iterator<Field> fields()
     {
-        // some code goes here
-        return null;
+        // hdj
+    	Iterator<Field> iter = new Iterator<Field>(){
+    		private int currentIndex = 0;
+    		/**
+    		*@Override
+    		**/
+    		public boolean hasNext(){
+    			return currentIndex < Items.length && Items[currentIndex] != null;
+    		}
+    		/**
+    		*@Override
+    		**/
+    		public void remove(){
+    			throw new UnsupportedOperationException("unimplemented");
+    		}
+    		/**
+    		*@Override
+    		**/
+    		public Field next(){
+    			return Items[currentIndex++];
+    		}
+    		
+    	};
+    	
+        return iter;
     }
 }
